@@ -1,0 +1,1712 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>超级个体定位器 | 专业四象限测评</title>
+    <style>
+        /* 基础样式 */
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; 
+        }
+        body { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            min-height: 100vh; 
+            padding: 20px; 
+        }
+        .container { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            background: white; 
+            border-radius: 20px; 
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3); 
+            overflow: hidden; 
+        }
+        
+        /* 头部 */
+        header { 
+            background: linear-gradient(90deg, #4f46e5, #7c3aed); 
+            color: white; 
+            padding: 30px; 
+            text-align: center; 
+        }
+        h1 { font-size: 2.2rem; margin-bottom: 10px; }
+        .subtitle { opacity: 0.9; font-size: 1.1rem; }
+        
+        /* 进度条 */
+        .progress-bar { height: 6px; background: #e5e7eb; }
+        .progress { height: 100%; background: #10b981; width: 0%; transition: width 0.5s; }
+        
+        /* 页面控制 */
+        .page { display: none; padding: 30px; }
+        .active { display: block; }
+        
+        /* 题目类型标签 */
+        .question-type-label {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        .type-single { background: #10b981; color: white; }
+        .type-multiple { background: #3b82f6; color: white; }
+        .type-slider { background: #8b5cf6; color: white; }
+        .type-sort { background: #f59e0b; color: white; }
+        
+        /* 问题样式 */
+        .question-group { 
+            margin-bottom: 25px; 
+            padding: 20px; 
+            background: #f9fafb; 
+            border-radius: 12px; 
+            border-left: 4px solid #4f46e5; 
+            position: relative;
+        }
+        h3 { color: #1f2937; margin-bottom: 10px; }
+        .question-hint { 
+            color: #6b7280; 
+            margin-bottom: 15px; 
+            font-size: 0.95rem; 
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 6px;
+            display: inline-block;
+        }
+        
+        /* 选项样式 - 增强视觉区分 */
+        .option { 
+            padding: 15px; 
+            margin: 8px 0; 
+            background: white; 
+            border: 2px solid #d1d5db; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+            position: relative;
+        }
+        .option:hover { border-color: #4f46e5; background: #f5f3ff; }
+        .option.selected { background: #4f46e5; color: white; border-color: #4f46e5; }
+        
+        /* 单选/多选图标 */
+        .option-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #d1d5db;
+            border-radius: 50%;
+            margin-right: 10px;
+            text-align: center;
+            line-height: 16px;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .option.selected .option-icon {
+            background: white;
+            color: #4f46e5;
+            border-color: white;
+        }
+        .option.multiple .option-icon { border-radius: 4px; }
+        
+        /* 滑块样式 */
+        .slider-container { margin: 20px 0; }
+        .slider { 
+            width: 100%; 
+            height: 8px; 
+            -webkit-appearance: none; 
+            appearance: none; 
+            background: linear-gradient(to right, #ef4444, #f59e0b, #10b981); 
+            border-radius: 4px; 
+            outline: none; 
+        }
+        .slider::-webkit-slider-thumb { 
+            -webkit-appearance: none; 
+            appearance: none; 
+            width: 24px; 
+            height: 24px; 
+            border-radius: 50%; 
+            background: #4f46e5; 
+            cursor: pointer; 
+            border: 3px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .slider-labels { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-top: 10px; 
+            color: #6b7280; 
+            font-size: 0.9rem; 
+        }
+        
+        /* 排序题样式 - 增强视觉区分 */
+        .sort-container { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            border: 1px solid #e5e7eb; 
+            margin: 15px 0;
+        }
+        .sort-instruction {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 6px;
+            border-left: 3px solid #f59e0b;
+        }
+        .sort-list { 
+            min-height: 200px; 
+            position: relative;
+        }
+        
+        /* 排序题项目 - 使用不同颜色区分 */
+        .sort-item { 
+            background: white; 
+            padding: 15px; 
+            margin-bottom: 10px; 
+            border: 2px solid #e5e7eb; 
+            border-radius: 8px; 
+            cursor: move; 
+            transition: all 0.2s; 
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+        .sort-item:hover { border-color: #4f46e5; transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .sort-item.dragging { opacity: 0.5; box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
+        
+        /* 排序题项目颜色区分 */
+        .sort-item:nth-child(5n+1) { border-left: 4px solid #10b981; }
+        .sort-item:nth-child(5n+2) { border-left: 4px solid #3b82f6; }
+        .sort-item:nth-child(5n+3) { border-left: 4px solid #f59e0b; }
+        .sort-item:nth-child(5n+4) { border-left: 4px solid #ef4444; }
+        .sort-item:nth-child(5n) { border-left: 4px solid #8b5cf6; }
+        
+        .sort-item .drag-handle { 
+            width: 20px; 
+            height: 20px; 
+            margin-right: 12px; 
+            color: #9ca3af; 
+            cursor: move;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .sort-item .item-number {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 12px;
+            font-size: 0.9rem;
+        }
+        .sort-item .item-content { 
+            flex: 1; 
+            font-weight: 500;
+        }
+        .sort-item .item-icon {
+            width: 24px;
+            height: 24px;
+            background: #f3f4f6;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 10px;
+            color: #6b7280;
+            font-size: 0.8rem;
+        }
+        
+        /* 按钮样式 */
+        .btn { 
+            padding: 12px 30px; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+        }
+        .btn-primary { background: #4f46e5; color: white; }
+        .btn-primary:hover { background: #4338ca; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-success:hover { background: #0da271; }
+        .btn-secondary { background: #6b7280; color: white; }
+        .btn-secondary:hover { background: #4b5563; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .btn-warning:hover { background: #d97706; }
+        
+        /* 导航 */
+        .nav { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-top: 30px; 
+            padding-top: 20px; 
+            border-top: 1px solid #e5e7eb; 
+        }
+        
+        /* 四象限图 */
+        .quadrant-chart { 
+            width: 350px; 
+            height: 350px; 
+            margin: 20px auto; 
+            position: relative; 
+            border: 2px solid #374151; 
+        }
+        .quadrant-label { 
+            position: absolute; 
+            font-weight: bold; 
+            font-size: 1.1rem; 
+        }
+        .q1-label { top: 20px; left: 20px; color: #10b981; }
+        .q2-label { top: 20px; right: 20px; color: #3b82f6; }
+        .q3-label { bottom: 20px; left: 20px; color: #f59e0b; }
+        .q4-label { bottom: 20px; right: 20px; color: #ef4444; }
+        .quadrant-point { 
+            position: absolute; 
+            width: 16px; 
+            height: 16px; 
+            background: #7c3aed; 
+            border-radius: 50%; 
+            border: 3px solid white; 
+            box-shadow: 0 0 0 2px #7c3aed; 
+        }
+        
+        /* 报告页 */
+        .report-page { 
+            padding: 40px; 
+            margin-bottom: 20px; 
+            background: white; 
+            border-radius: 10px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            page-break-after: always;
+        }
+        .report-cover { 
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); 
+            color: white; 
+            text-align: center; 
+            padding: 60px 40px;
+            border-radius: 15px;
+        }
+        
+        /* 升级选项 */
+        .upgrade-section { 
+            background: linear-gradient(135deg, #fef3c7, #fde68a); 
+            padding: 25px; 
+            border-radius: 12px; 
+            margin: 30px 0; 
+            text-align: center;
+            border: 2px solid #f59e0b;
+        }
+        
+        /* 反馈入口 */
+        .feedback-section { 
+            background: #f0f9ff; 
+            padding: 20px; 
+            border-radius: 10px; 
+            margin: 20px 0; 
+            text-align: center;
+            border: 1px solid #dbeafe;
+        }
+        
+        /* 数据管理界面 */
+        .data-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4f46e5;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        /* 模态框 */
+        .modal { 
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.5); 
+            z-index: 1000; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        .modal-content { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 15px; 
+            max-width: 500px; 
+            width: 90%; 
+            max-height: 80vh; 
+            overflow-y: auto; 
+        }
+        
+        /* 管理员面板 */
+        .admin-panel {
+            background: #f8fafc;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        
+        /* 当前题目标识 */
+        .current-question {
+            position: absolute;
+            top: -10px;
+            right: 20px;
+            background: #4f46e5;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        /* 选项描述样式 */
+        .option-desc {
+            font-size: 0.9rem;
+            margin-top: 5px;
+            opacity: 0.9;
+        }
+        
+        @media (max-width: 768px) {
+            .container { border-radius: 10px; }
+            .quadrant-chart { width: 300px; height: 300px; }
+            .data-stats { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧭 超级个体定位器</h1>
+            <p class="subtitle">四象限专业测评 · 视觉优化版</p>
+        </header>
+        
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+        
+        <!-- 页面1: 欢迎页 -->
+        <div id="page-welcome" class="page active">
+            <div style="text-align: center; padding: 20px;">
+                <h2 style="color: #4f46e5; margin-bottom: 20px;">🔍 发现你的绝对优势</h2>
+                <p style="line-height: 1.6; margin-bottom: 30px; color: #4b5563;">
+                    通过12个维度的科学评估，精准定位你在四象限模型中的位置，<br>
+                    获得个性化发展建议和10页专业报告。
+                </p>
+                
+                <!-- 数据收集声明 -->
+                <div class="feedback-section">
+                    <p style="color: #1e40af; margin-bottom: 10px;">
+                        <i class="fas fa-database"></i> 数据收集说明
+                    </p>
+                    <p style="color: #4b5563; font-size: 0.95rem; line-height: 1.5;">
+                        本测评将匿名收集测试结果，用于分析和改进测评工具。<br>
+                        所有数据将严格保密，仅用于统计分析。
+                    </p>
+                </div>
+                
+                <!-- 四象限图示 -->
+                <div style="display: flex; justify-content: center; margin: 30px 0;">
+                    <div style="width: 300px; height: 300px; border: 2px solid #374151; position: relative;">
+                        <div style="position: absolute; width: 100%; height: 2px; background: #374151; top: 50%;"></div>
+                        <div style="position: absolute; width: 2px; height: 100%; background: #374151; left: 50%;"></div>
+                        <div style="position: absolute; top: 20px; left: 20px; color: #10b981; font-weight: bold; font-size: 0.9rem;">战略创新者</div>
+                        <div style="position: absolute; top: 20px; right: 20px; color: #3b82f6; font-weight: bold; font-size: 0.9rem;">人际影响者</div>
+                        <div style="position: absolute; bottom: 20px; left: 20px; color: #f59e0b; font-weight: bold; font-size: 0.9rem;">技术执行者</div>
+                        <div style="position: absolute; bottom: 20px; right: 20px; color: #ef4444; font-weight: bold; font-size: 0.9rem;">运营协调者</div>
+                    </div>
+                </div>
+                
+                <div style="text-align: left; max-width: 500px; margin: 0 auto 30px;">
+                    <h4 style="color: #4f46e5; margin-bottom: 15px;">你将获得：</h4>
+                    <div style="background: #f0f9ff; padding: 20px; border-radius: 10px;">
+                        <p><span style="color: #10b981; font-weight: bold;">✓</span> 四象限精准定位分析</p>
+                        <p><span style="color: #10b981; font-weight: bold;">✓</span> 10页专业发展报告（可保存为PDF）</p>
+                        <p><span style="color: #10b981; font-weight: bold;">✓</span> 个性化发展建议与行动计划</p>
+                        <p><span style="color: #10b981; font-weight: bold;">✓</span> 90天成长路线图</p>
+                    </div>
+                </div>
+                
+                <button id="start-btn" class="btn btn-primary" style="padding: 15px 40px; font-size: 1.1rem; margin-bottom: 20px;">
+                    开始测评 (约10-12分钟)
+                </button>
+                
+                <!-- 管理员入口 -->
+                <div style="margin-top: 20px;">
+                    <button onclick="showAdminPanel()" class="btn btn-secondary" style="padding: 8px 20px; font-size: 0.9rem;">
+                        <i class="fas fa-cog"></i> 管理员入口
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 页面2: 测评问题 -->
+        <div id="page-questions" class="page">
+            <div id="questions-container"></div>
+            <div class="nav">
+                <button id="prev-btn" class="btn btn-secondary" onclick="prevQuestion()">上一题</button>
+                <button id="next-btn" class="btn btn-primary" onclick="nextQuestion()">下一题</button>
+            </div>
+        </div>
+        
+        <!-- 页面3: 结果页 -->
+        <div id="page-result" class="page">
+            <div style="text-align: center;">
+                <h2 style="color: #4f46e5; margin-bottom: 20px;">🎯 你的四象限定位</h2>
+                
+                <div id="result-content" style="margin-bottom: 30px;">
+                    <!-- 结果将动态生成 -->
+                </div>
+                
+                <!-- 数据收集成功提示 -->
+                <div id="data-success" style="display: none; background: #f0fdf4; color: #166534; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
+                    <i class="fas fa-check-circle"></i> 您的测评数据已成功保存！感谢参与。
+                </div>
+                
+                <!-- 升级选项 -->
+                <div class="upgrade-section">
+                    <h3 style="color: #92400e; margin-bottom: 15px;">✨ 升级为专业顾问服务</h3>
+                    <p style="color: #78350f; margin-bottom: 20px;">
+                        免费报告提供了方向，专业顾问帮你绘制精确的施工图。
+                    </p>
+                    
+                    <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px auto; max-width: 400px;">
+                        <h4 style="color: #d97706; margin-bottom: 15px;">"超级个体"启动咨询</h4>
+                        <div style="text-align: left; margin-bottom: 20px;">
+                            <p><span style="color: #10b981; font-weight: bold;">✓</span> 30分钟一对一深度解读报告</p>
+                            <p><span style="color: #10b981; font-weight: bold;">✓</span> 定制90天行动计划表</p>
+                            <p><span style="color: #10b981; font-weight: bold;">✓</span> 推荐精准学习资源与工具</p>
+                            <p><span style="color: #10b981; font-weight: bold;">✓</span> 3次邮件跟进支持</p>
+                        </div>
+                        
+                        <div style="margin: 20px 0;">
+                            <p style="font-size: 0.9rem; color: #6b7280;">原价：<s>299元</s></p>
+                            <p style="font-size: 1.5rem; color: #d97706; font-weight: bold;">限时体验价：99元</p>
+                        </div>
+                        
+                        <button class="btn btn-warning" onclick="showConsultationModal()" style="padding: 12px 30px;">
+                            立即预约咨询
+                        </button>
+                        
+                        <p style="font-size: 0.9rem; color: #92400e; margin-top: 15px;">
+                            扫码添加微信，备注"咨询"即可预约
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- 反馈入口 -->
+                <div class="feedback-section">
+                    <h4 style="color: #1e40af; margin-bottom: 10px;">💬 帮助改进这个工具</h4>
+                    <p style="color: #4b5563; font-size: 0.95rem; margin-bottom: 15px;">
+                        完成测评后，欢迎扫码加入反馈群<br>
+                        你的建议会让工具变得更好！
+                    </p>
+                </div>
+                
+                <div style="margin-top: 30px;">
+                    <button class="btn btn-success" onclick="generateReport()" style="padding: 12px 30px; margin-right: 10px;">
+                        生成专业报告
+                    </button>
+                    <button class="btn btn-secondary" onclick="restartTest()">
+                        重新测评
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 页面4: 报告页 -->
+        <div id="page-report" class="page">
+            <div id="report-container"></div>
+            <div style="text-align: center; margin: 30px 0;">
+                <button onclick="printReport()" class="btn btn-success" style="margin-right: 10px;">
+                    打印/保存为PDF
+                </button>
+                <button onclick="showResultPage()" class="btn btn-secondary">
+                    返回结果页
+                </button>
+            </div>
+        </div>
+        
+        <!-- 页面5: 管理员面板 -->
+        <div id="page-admin" class="page">
+            <div style="padding: 20px;">
+                <h2 style="color: #4f46e5; margin-bottom: 20px;">📊 数据管理系统</h2>
+                
+                <div class="admin-panel">
+                    <h3 style="color: #1f2937; margin-bottom: 20px;">数据统计概览</h3>
+                    
+                    <div class="data-stats">
+                        <div class="stat-card">
+                            <div class="stat-value" id="total-responses">0</div>
+                            <div class="stat-label">总测试人数</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="today-responses">0</div>
+                            <div class="stat-label">今日新增</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="avg-score">0</div>
+                            <div class="stat-label">平均分</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="q1-count">0</div>
+                            <div class="stat-label">第一象限人数</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 25px;">
+                        <h4 style="color: #4f46e5; margin-bottom: 15px;">数据操作</h4>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+                            <button onclick="exportData('json')" class="btn btn-success">
+                                <i class="fas fa-file-code"></i> 导出JSON
+                            </button>
+                            <button onclick="exportData('csv')" class="btn btn-success">
+                                <i class="fas fa-file-csv"></i> 导出CSV
+                            </button>
+                            <button onclick="clearAllData()" class="btn btn-secondary">
+                                <i class="fas fa-trash"></i> 清空数据
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 style="color: #4f46e5; margin-bottom: 15px;">数据预览（最近20条）</h4>
+                        <div style="background: white; border-radius: 8px; overflow: auto; max-height: 300px;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                                <thead>
+                                    <tr style="background: #f8fafc;">
+                                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb;">序号</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb;">时间</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb;">象限</th>
+                                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb;">分数</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="data-table-body">
+                                    <!-- 数据行将通过JS动态添加 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                    <button onclick="showWelcomePage()" class="btn btn-secondary">
+                        返回首页
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 咨询预约模态框 -->
+        <div id="consultation-modal" class="modal">
+            <div class="modal-content">
+                <h3 style="color: #4f46e5; margin-bottom: 20px;">预约专业咨询</h3>
+                <p style="color: #4b5563; margin-bottom: 20px;">请填写以下信息，我们将在24小时内与您联系确认咨询时间。</p>
+                
+                <div style="margin-bottom: 20px;">
+                    <input type="text" id="name" placeholder="您的姓名" style="width: 100%; padding: 12px; border: 2px solid #d1d5db; border-radius: 8px; margin-bottom: 15px;">
+                    <input type="email" id="email" placeholder="电子邮箱" style="width: 100%; padding: 12px; border: 2px solid #d1d5db; border-radius: 8px; margin-bottom: 15px;">
+                    <input type="tel" id="phone" placeholder="手机号（可选）" style="width: 100%; padding: 12px; border: 2px solid #d1d5db; border-radius: 8px; margin-bottom: 15px;">
+                    
+                    <div style="margin-bottom: 20px;">
+                        <p style="color: #4b5563; margin-bottom: 10px;">偏好的咨询时间：</p>
+                        <select id="time-preference" style="width: 100%; padding: 12px; border: 2px solid #d1d5db; border-radius: 8px;">
+                            <option value="">请选择时间段</option>
+                            <option value="weekday_morning">工作日 9:00-12:00</option>
+                            <option value="weekday_afternoon">工作日 14:00-18:00</option>
+                            <option value="weekday_evening">工作日 19:00-21:00</option>
+                            <option value="weekend">周末 9:00-18:00</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="submitConsultation()" class="btn btn-primary" style="flex: 1;">提交预约</button>
+                    <button onclick="closeConsultationModal()" class="btn btn-secondary" style="flex: 1;">取消</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 管理员登录模态框 -->
+        <div id="admin-login-modal" class="modal">
+            <div class="modal-content">
+                <h3 style="color: #4f46e5; margin-bottom: 20px;">管理员登录</h3>
+                <p style="color: #4b5563; margin-bottom: 20px;">请输入管理员密码</p>
+                
+                <div style="margin-bottom: 20px;">
+                    <input type="password" id="admin-password" placeholder="管理员密码" style="width: 100%; padding: 12px; border: 2px solid #d1d5db; border-radius: 8px; margin-bottom: 15px;">
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="loginAdmin()" class="btn btn-primary" style="flex: 1;">登录</button>
+                    <button onclick="closeAdminLoginModal()" class="btn btn-secondary" style="flex: 1;">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 全局变量 ====================
+        const CONFIG = {
+            ADMIN_PASSWORD: "admin123", // 管理员密码，可以修改
+            STORAGE_KEY: "super_individual_data_v2",
+            CONSULTATION_KEY: "consultation_data_v2"
+        };
+        
+        let currentPage = 0;
+        let currentQuestion = 0;
+        let userAnswers = {};
+        let testData = {};
+        let allTestData = [];
+        let consultationData = [];
+        
+        // 测评问题
+        const questions = [
+            {
+                id: 1,
+                question: "思维模式偏好",
+                hint: "选择最符合你思维方式的一项",
+                type: "single",
+                typeText: "单选题",
+                options: [
+                    { value: "abstract", text: "抽象思维", desc: "关注概念、理论、未来可能性" },
+                    { value: "concrete", text: "具体思维", desc: "关注细节、事实、实际应用" }
+                ]
+            },
+            {
+                id: 2,
+                question: "行动风格倾向",
+                hint: "面对新任务时，你的第一反应通常是？",
+                type: "single",
+                typeText: "单选题",
+                options: [
+                    { value: "plan", text: "先规划", desc: "制定详细计划，明确步骤" },
+                    { value: "action", text: "先行动", desc: "立即尝试，边做边调整" }
+                ]
+            },
+            {
+                id: 3,
+                question: "决策依赖度",
+                hint: "滑动滑块表示你做重要决定时的依赖程度",
+                type: "slider",
+                typeText: "滑块题",
+                min: 1,
+                max: 10,
+                default: 5,
+                labels: ["直觉感受", "混合依赖", "数据逻辑"]
+            },
+            {
+                id: 4,
+                question: "工作环境偏好",
+                hint: "你更喜欢哪种工作环境？",
+                type: "single",
+                typeText: "单选题",
+                options: [
+                    { value: "team", text: "团队协作", desc: "喜欢讨论、协作、集体决策" },
+                    { value: "solo", text: "独立工作", desc: "喜欢专注、自主、个人负责" }
+                ]
+            },
+            {
+                id: 5,
+                question: "技术适应能力",
+                hint: "面对新技术工具，你的态度是？",
+                type: "slider",
+                typeText: "滑块题",
+                min: 1,
+                max: 10,
+                default: 5,
+                labels: ["谨慎保守", "适度尝试", "积极拥抱"]
+            },
+            {
+                id: 6,
+                question: "沟通表达偏好",
+                hint: "选择你擅长或偏好的沟通方式（可多选）",
+                type: "multiple",
+                typeText: "多选题",
+                options: [
+                    { value: "write", text: "书面表达", desc: "写作、文档、邮件" },
+                    { value: "speak", text: "口头表达", desc: "演讲、讨论、会议" },
+                    { value: "visual", text: "视觉表达", desc: "图表、演示、可视化" },
+                    { value: "action", text: "行动示范", desc: "演示、手把手教" }
+                ]
+            },
+            {
+                id: 7,
+                question: "学习吸收模式",
+                hint: "你如何学习新知识效果最好？",
+                type: "single",
+                typeText: "单选题",
+                options: [
+                    { value: "theory", text: "理论先行", desc: "先掌握理论框架，再实践" },
+                    { value: "practice", text: "实践先行", desc: "先动手尝试，再总结理论" }
+                ]
+            },
+            {
+                id: 8,
+                question: "问题解决倾向",
+                hint: "遇到难题时，你更倾向于？（可多选）",
+                type: "multiple",
+                typeText: "多选题",
+                options: [
+                    { value: "research", text: "深入研究", desc: "查资料、分析原因" },
+                    { value: "ask", text: "寻求帮助", desc: "请教他人、寻找专家" },
+                    { value: "try", text: "尝试解决", desc: "试错调整、不断优化" },
+                    { value: "delegate", text: "委托他人", desc: "分工合作、发挥团队优势" }
+                ]
+            },
+            {
+                id: 9,
+                question: "风险承受能力",
+                hint: "在不确定性面前，你的态度是？",
+                type: "slider",
+                typeText: "滑块题",
+                min: 1,
+                max: 10,
+                default: 5,
+                labels: ["风险规避", "适度冒险", "风险偏好"]
+            },
+            {
+                id: 10,
+                question: "成就感来源",
+                hint: "什么最能给你带来成就感？（可多选）",
+                type: "multiple",
+                typeText: "多选题",
+                options: [
+                    { value: "achieve", text: "达成目标", desc: "完成挑战，解决问题" },
+                    { value: "create", text: "创造创新", desc: "做出新东西，发明新方法" },
+                    { value: "help", text: "帮助他人", desc: "支持别人成长，提供服务" },
+                    { value: "learn", text: "学习掌握", desc: "学会新知识，掌握新技能" }
+                ]
+            },
+            {
+                id: 11,
+                question: "工作价值排序",
+                hint: "请按重要性排序（拖动项目重新排序）",
+                type: "sort",
+                typeText: "排序题",
+                options: [
+                    { value: "meaning", text: "工作的意义和价值", icon: "🎯" },
+                    { value: "growth", text: "个人成长和学习机会", icon: "📈" },
+                    { value: "income", text: "收入水平和经济回报", icon: "💰" },
+                    { value: "balance", text: "工作生活平衡", icon: "⚖️" },
+                    { value: "impact", text: "社会影响和认可度", icon: "🌟" }
+                ]
+            },
+            {
+                id: 12,
+                question: "心流体验领域",
+                hint: "你在什么活动中最容易进入\"心流\"状态？（可多选）",
+                type: "multiple",
+                typeText: "多选题",
+                options: [
+                    { value: "analyze", text: "分析数据/研究问题", desc: "深入研究复杂问题" },
+                    { value: "design", text: "设计/创造/艺术创作", desc: "创造新事物或解决方案" },
+                    { value: "teach", text: "教学/指导/帮助他人", desc: "传授知识，帮助他人成长" },
+                    { value: "manage", text: "组织/管理/协调资源", desc: "规划、协调、优化流程" }
+                ]
+            }
+        ];
+        
+        // ==================== 初始化 ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            // 绑定开始按钮
+            document.getElementById('start-btn').addEventListener('click', startTest);
+            
+            // 加载已保存的数据
+            loadAllData();
+            loadConsultationData();
+            
+            // 初始显示欢迎页
+            showPage('page-welcome');
+        });
+        
+        // ==================== 数据管理 ====================
+        function loadAllData() {
+            try {
+                const data = localStorage.getItem(CONFIG.STORAGE_KEY);
+                allTestData = data ? JSON.parse(data) : [];
+            } catch (e) {
+                console.error('加载数据失败:', e);
+                allTestData = [];
+            }
+        }
+        
+        function loadConsultationData() {
+            try {
+                const data = localStorage.getItem(CONFIG.CONSULTATION_KEY);
+                consultationData = data ? JSON.parse(data) : [];
+            } catch (e) {
+                console.error('加载咨询数据失败:', e);
+                consultationData = [];
+            }
+        }
+        
+        function saveTestData() {
+            // 生成唯一ID
+            const id = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            
+            // 添加到测试数据
+            const testRecord = {
+                id: id,
+                timestamp: new Date().toISOString(),
+                quadrant: testData.quadrant,
+                quadrantName: testData.quadrantName,
+                score: testData.score,
+                data: JSON.parse(JSON.stringify(userAnswers)),
+                result: JSON.parse(JSON.stringify(testData))
+            };
+            
+            allTestData.push(testRecord);
+            localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(allTestData));
+            
+            // 显示成功提示
+            document.getElementById('data-success').style.display = 'block';
+            
+            return id;
+        }
+        
+        // ==================== 页面控制 ====================
+        function showPage(pageName) {
+            // 隐藏所有页面
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // 显示目标页面
+            document.getElementById(pageName).classList.add('active');
+            
+            // 更新进度条
+            updateProgressBar();
+            
+            // 设置当前页面索引
+            if (pageName === 'page-welcome') currentPage = 0;
+            else if (pageName === 'page-questions') currentPage = 1;
+            else if (pageName === 'page-result') currentPage = 2;
+            else if (pageName === 'page-report') currentPage = 3;
+            else if (pageName === 'page-admin') currentPage = 4;
+        }
+        
+        function updateProgressBar() {
+            let progress = 0;
+            if (currentPage === 0) progress = 0;
+            else if (currentPage === 1) progress = (currentQuestion + 1) / questions.length * 50;
+            else if (currentPage === 2) progress = 75;
+            else if (currentPage === 3) progress = 100;
+            else if (currentPage === 4) progress = 100;
+            
+            document.getElementById('progress').style.width = progress + '%';
+        }
+        
+        // ==================== 测评逻辑 ====================
+        function startTest() {
+            currentQuestion = 0;
+            userAnswers = {};
+            showQuestion(currentQuestion);
+            showPage('page-questions');
+        }
+        
+        function showQuestion(index) {
+            if (index < 0 || index >= questions.length) return;
+            
+            const q = questions[index];
+            const container = document.getElementById('questions-container');
+            
+            // 生成问题HTML
+            let html = `
+                <div class="question-group">
+                    <div class="current-question">第 ${index + 1} 题 / 共 ${questions.length} 题</div>
+                    <h3>${q.question} 
+                        <span class="question-type-label type-${q.type}">${q.typeText}</span>
+                    </h3>
+                    <p class="question-hint">${q.hint}</p>
+                    <div id="options-container">
+            `;
+            
+            if (q.type === 'single' || q.type === 'multiple') {
+                // 单选题或多选题
+                q.options.forEach(option => {
+                    const isSelected = userAnswers[q.id] && (
+                        q.type === 'single' ? userAnswers[q.id] === option.value :
+                        userAnswers[q.id].includes(option.value)
+                    );
+                    
+                    const icon = q.type === 'single' ? '○' : '□';
+                    const selectedIcon = q.type === 'single' ? '●' : '✓';
+                    
+                    html += `
+                        <div class="option ${q.type === 'multiple' ? 'multiple' : ''} ${isSelected ? 'selected' : ''}" 
+                             onclick="selectOption('${q.id}', '${option.value}', '${q.type}')">
+                            <span class="option-icon">${isSelected ? selectedIcon : icon}</span>
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: 5px;">${option.text}</div>
+                                <div class="option-desc">${option.desc}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else if (q.type === 'slider') {
+                // 滑块题
+                const value = userAnswers[q.id] || q.default;
+                html += `
+                    <div class="slider-container">
+                        <input type="range" min="${q.min}" max="${q.max}" value="${value}" 
+                               class="slider" id="slider-${q.id}" oninput="updateSliderValue(${q.id}, this.value)">
+                        <div class="slider-labels">
+                            <span>${q.labels[0]}</span>
+                            <span>${q.labels[1]}</span>
+                            <span>${q.labels[2]}</span>
+                        </div>
+                        <div style="text-align: center; margin-top: 10px; color: #4f46e5; font-weight: bold;">
+                            当前值: ${value}
+                        </div>
+                    </div>
+                `;
+            } else if (q.type === 'sort') {
+                // 排序题 - 增强视觉区分
+                const currentOrder = userAnswers[q.id] || q.options.map(opt => opt.value);
+                html += `
+                    <div class="sort-container">
+                        <div class="sort-instruction">
+                            <i class="fas fa-info-circle"></i> 拖动项目重新排序（最重要的放最上面）
+                        </div>
+                        <div id="sort-list-${q.id}" class="sort-list">
+                `;
+                
+                currentOrder.forEach((value, index) => {
+                    const option = q.options.find(opt => opt.value === value);
+                    if (option) {
+                        html += `
+                            <div class="sort-item" data-value="${option.value}" draggable="true"
+                                 ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dropItem('${q.id}', event)">
+                                <div class="drag-handle">
+                                    <i class="fas fa-grip-vertical"></i>
+                                </div>
+                                <div class="item-number">${index + 1}</div>
+                                <div class="item-content">${option.text}</div>
+                                <div class="item-icon">${option.icon || '📋'}</div>
+                            </div>
+                        `;
+                    }
+                });
+                
+                html += `</div></div>`;
+            }
+            
+            html += `</div></div>`;
+            container.innerHTML = html;
+            
+            // 更新按钮状态
+            updateNavButtons();
+        }
+        
+        function selectOption(questionId, value, type) {
+            if (!userAnswers[questionId]) {
+                userAnswers[questionId] = type === 'single' ? value : [value];
+            } else {
+                if (type === 'single') {
+                    userAnswers[questionId] = value;
+                } else {
+                    const answers = userAnswers[questionId];
+                    const index = answers.indexOf(value);
+                    if (index === -1) {
+                        answers.push(value);
+                    } else {
+                        answers.splice(index, 1);
+                    }
+                }
+            }
+            
+            // 重新显示当前问题以更新选中状态
+            showQuestion(currentQuestion);
+        }
+        
+        function updateSliderValue(questionId, value) {
+            userAnswers[questionId] = parseInt(value);
+            
+            // 更新显示值
+            const slider = document.getElementById(`slider-${questionId}`);
+            if (slider) {
+                const display = slider.parentElement.querySelector('div:last-child');
+                if (display) {
+                    display.textContent = `当前值: ${value}`;
+                }
+            }
+        }
+        
+        // 排序题拖放功能
+        let draggedItem = null;
+        
+        function dragStart(e) {
+            draggedItem = e.target.closest('.sort-item');
+            if (draggedItem) {
+                setTimeout(() => {
+                    draggedItem.classList.add('dragging');
+                }, 0);
+            }
+        }
+        
+        function dragOver(e) {
+            e.preventDefault();
+        }
+        
+        function dropItem(questionId, e) {
+            e.preventDefault();
+            const target = e.target.closest('.sort-item');
+            const list = document.getElementById(`sort-list-${questionId}`);
+            
+            if (draggedItem && target && draggedItem !== target) {
+                // 获取所有项目
+                const items = Array.from(list.querySelectorAll('.sort-item'));
+                const draggedIndex = items.indexOf(draggedItem);
+                const targetIndex = items.indexOf(target);
+                
+                if (draggedIndex < targetIndex) {
+                    target.after(draggedItem);
+                } else {
+                    target.before(draggedItem);
+                }
+                
+                // 更新排序
+                updateSortOrder(questionId);
+            }
+            
+            if (draggedItem) {
+                draggedItem.classList.remove('dragging');
+                draggedItem = null;
+            }
+        }
+        
+        function updateSortOrder(questionId) {
+            const items = document.querySelectorAll(`#sort-list-${questionId} .sort-item`);
+            const order = Array.from(items).map(item => item.getAttribute('data-value'));
+            userAnswers[questionId] = order;
+            
+            // 更新序号
+            items.forEach((item, index) => {
+                const numberElement = item.querySelector('.item-number');
+                if (numberElement) {
+                    numberElement.textContent = index + 1;
+                }
+            });
+        }
+        
+        function nextQuestion() {
+            if (currentQuestion < questions.length - 1) {
+                currentQuestion++;
+                showQuestion(currentQuestion);
+            } else {
+                completeTest();
+            }
+        }
+        
+        function prevQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                showQuestion(currentQuestion);
+            }
+        }
+        
+        function updateNavButtons() {
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            
+            prevBtn.style.visibility = currentQuestion === 0 ? 'hidden' : 'visible';
+            nextBtn.textContent = currentQuestion === questions.length - 1 ? '完成测评' : '下一题';
+        }
+        
+        // ==================== 测试完成逻辑 ====================
+        function completeTest() {
+            // 计算四象限结果
+            calculateResult();
+            
+            // 保存数据
+            saveTestData();
+            
+            // 显示结果页
+            showResultPage();
+        }
+        
+        function calculateResult() {
+            // 计算X轴：思维倾向（抽象->具体）
+            let xScore = 0;
+            
+            // q1: 抽象思维=-5, 具体思维=5
+            if (userAnswers[1] === 'abstract') xScore -= 5;
+            else if (userAnswers[1] === 'concrete') xScore += 5;
+            
+            // q3: 直觉感受=-5, 数据逻辑=5
+            if (userAnswers[3]) {
+                xScore += (userAnswers[3] - 5.5) * 0.8;
+            }
+            
+            // q7: 理论先行=-4, 实践先行=4
+            if (userAnswers[7] === 'theory') xScore -= 4;
+            else if (userAnswers[7] === 'practice') xScore += 4;
+            
+            // 计算Y轴：人际关系倾向（人文->技术）
+            let yScore = 0;
+            
+            // q4: 团队协作=-4, 独立工作=4
+            if (userAnswers[4] === 'team') yScore -= 4;
+            else if (userAnswers[4] === 'solo') yScore += 4;
+            
+            // q5: 技术保守=-5, 技术积极=5
+            if (userAnswers[5]) {
+                yScore += (userAnswers[5] - 5.5) * 0.8;
+            }
+            
+            // q6: 如果包含"书面表达"或"口头表达"更偏人文
+            if (userAnswers[6]) {
+                if (userAnswers[6].includes('write') || userAnswers[6].includes('speak')) {
+                    yScore -= 3;
+                }
+                // 如果包含"视觉表达"或"行动示范"更偏技术
+                if (userAnswers[6].includes('visual') || userAnswers[6].includes('action')) {
+                    yScore += 3;
+                }
+            }
+            
+            // 归一化到 -8 到 8
+            const x = Math.max(-8, Math.min(8, xScore));
+            const y = Math.max(-8, Math.min(8, yScore));
+            
+            // 确定象限
+            let quadrant = 'center';
+            let quadrantName = '平衡发展者';
+            let color = '#8b5cf6';
+            
+            if (x < 0 && y < 0) { quadrant = 'q1'; quadrantName = '战略创新者'; color = '#10b981'; }
+            else if (x > 0 && y < 0) { quadrant = 'q2'; quadrantName = '人际影响者'; color = '#3b82f6'; }
+            else if (x > 0 && y > 0) { quadrant = 'q3'; quadrantName = '技术执行者'; color = '#f59e0b'; }
+            else if (x < 0 && y > 0) { quadrant = 'q4'; quadrantName = '运营协调者'; color = '#ef4444'; }
+            
+            // 计算总分
+            let score = 50;
+            score += Object.keys(userAnswers).length * 4;
+            
+            // 根据滑块值加分
+            if (userAnswers[3]) score += (userAnswers[3] - 5) * 2;
+            if (userAnswers[5]) score += (userAnswers[5] - 5) * 2;
+            if (userAnswers[9]) score += (userAnswers[9] - 5) * 2;
+            
+            // 根据多选数量加分
+            if (userAnswers[6]) score += userAnswers[6].length * 3;
+            if (userAnswers[8]) score += userAnswers[8].length * 3;
+            if (userAnswers[10]) score += userAnswers[10].length * 3;
+            if (userAnswers[12]) score += userAnswers[12].length * 3;
+            
+            // 存储结果
+            testData = {
+                quadrant: quadrant,
+                quadrantName: quadrantName,
+                color: color,
+                score: Math.min(100, Math.max(0, Math.round(score))),
+                x: x,
+                y: y,
+                answers: JSON.parse(JSON.stringify(userAnswers)),
+                timestamp: new Date().toISOString()
+            };
+        }
+        
+        // ==================== 结果显示 ====================
+        function showResultPage() {
+            const resultDiv = document.getElementById('result-content');
+            const q = testData;
+            
+            // 计算在四象限图中的位置
+            const chartSize = 350;
+            const center = chartSize / 2;
+            const xPos = center + (q.x / 8) * (center - 20);
+            const yPos = center - (q.y / 8) * (center - 20);
+            
+            resultDiv.innerHTML = `
+                <div style="text-align: center;">
+                    <div class="quadrant-chart">
+                        <div style="position: absolute; width: 100%; height: 2px; background: #374151; top: 50%;"></div>
+                        <div style="position: absolute; width: 2px; height: 100%; background: #374151; left: 50%;"></div>
+                        
+                        <div class="quadrant-label q1-label">战略创新者</div>
+                        <div class="quadrant-label q2-label">人际影响者</div>
+                        <div class="quadrant-label q3-label">技术执行者</div>
+                        <div class="quadrant-label q4-label">运营协调者</div>
+                        
+                        <div class="quadrant-point" style="left: ${xPos}px; top: ${yPos}px;"></div>
+                    </div>
+                    
+                    <div style="margin-top: 20px;">
+                        <h2 style="color: ${q.color}; margin-bottom: 10px;">${q.quadrantName}</h2>
+                        <div style="font-size: 2.5rem; color: #4f46e5; font-weight: bold; margin: 10px 0;">${q.score}/100</div>
+                        <p style="color: #4b5563; max-width: 500px; margin: 0 auto 20px; line-height: 1.6;">
+                            ${getQuadrantDescription(q.quadrant)}
+                        </p>
+                    </div>
+                </div>
+                
+                <div style="background: #f8fafc; padding: 20px; border-radius: 10px; margin-top: 20px; text-align: left;">
+                    <h4 style="color: #4f46e5; margin-bottom: 15px;">你的核心特点：</h4>
+                    <ul style="color: #4b5563; line-height: 1.6; padding-left: 20px;">
+                        ${getQuadrantStrengths(q.quadrant).map(s => `<li>${s}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+            
+            showPage('page-result');
+        }
+        
+        function getQuadrantDescription(quadrant) {
+            const descriptions = {
+                'q1': '你擅长抽象思考和创新构想，关注人文价值和长远影响。在战略规划、产品设计、咨询分析等领域有天然优势。',
+                'q2': '你擅长人际互动和具体问题解决，能够有效沟通协调，在团队管理、客户关系、培训教育等领域表现出色。',
+                'q3': '你注重具体实施和技术细节，动手能力强，在技术开发、数据分析、工程实施等领域有显著优势。',
+                'q4': '你擅长系统思考和技术协调，能够有效整合资源和管理流程，在产品管理、运营优化、项目管理等领域有独特优势。',
+                'center': '你在各个维度相对平衡，适应性强，能够根据情境灵活调整。建议明确1-2个重点发展方向。'
+            };
+            return descriptions[quadrant] || descriptions.center;
+        }
+        
+        function getQuadrantStrengths(quadrant) {
+            const strengths = {
+                'q1': ['强大的概念化和抽象思维能力', '擅长从复杂信息中发现模式', '关注用户体验和人文价值', '善于制定长期战略'],
+                'q2': ['出色的沟通和人际协调能力', '擅长解决具体问题', '能够有效激励和影响他人', '强大的同理心'],
+                'q3': ['强大的技术实施和操作能力', '注重细节和质量把控', '擅长解决具体技术问题', '学习新工具速度快'],
+                'q4': ['强大的系统思维和流程优化能力', '擅长协调资源和管理项目', '技术理解深入，能够有效对接', '注重效率和结果导向'],
+                'center': ['适应性强，能在不同环境中工作', '思维灵活，能多角度思考', '综合能力较为均衡', '学习新领域障碍小']
+            };
+            return strengths[quadrant] || strengths.center;
+        }
+        
+        // ==================== 报告生成 ====================
+        function generateReport() {
+            const container = document.getElementById('report-container');
+            const q = testData;
+            const date = new Date().toLocaleDateString('zh-CN');
+            
+            container.innerHTML = `
+                <!-- 第1页：封面 -->
+                <div class="report-page report-cover">
+                    <h1 style="font-size: 2.5rem; margin-bottom: 20px;">超级个体发展报告</h1>
+                    <h2 style="font-size: 1.5rem; margin-bottom: 40px; opacity: 0.9;">${q.quadrantName}的发展路径</h2>
+                    <div style="margin: 40px 0;">
+                        <p style="font-size: 1.1rem; margin: 10px 0;">定位类型：${q.quadrantName}</p>
+                        <p style="font-size: 1.1rem; margin: 10px 0;">综合潜力评分：${q.score}/100</p>
+                        <p style="font-size: 1.1rem; margin: 10px 0;">报告生成时间：${date}</p>
+                    </div>
+                </div>
+                
+                <!-- 第2页：执行摘要 -->
+                <div class="report-page">
+                    <h2 style="color: #4f46e5; margin-bottom: 20px; text-align: center;">执行摘要</h2>
+                    <div style="background: #f8fafc; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #1f2937; margin-bottom: 15px;">你的四象限定位</h3>
+                        <p style="color: #4b5563; line-height: 1.6; margin-bottom: 15px;">
+                            基于测评结果，你的定位是：<span style="color: ${q.color}; font-weight: bold;">${q.quadrantName}</span>
+                        </p>
+                        <p style="color: #4b5563; line-height: 1.6;">${getQuadrantDescription(q.quadrant)}</p>
+                    </div>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        <div class="quadrant-chart" style="margin: 0 auto;">
+                            <div style="position: absolute; width: 100%; height: 2px; background: #374151; top: 50%;"></div>
+                            <div style="position: absolute; width: 2px; height: 100%; background: #374151; left: 50%;"></div>
+                            <div class="quadrant-point" style="left: ${175 + (q.x/8)*155}px; top: ${175 - (q.y/8)*155}px;"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 第3-5页：发展建议等 -->
+                <div class="report-page">
+                    <h2 style="color: #4f46e5; margin-bottom: 20px;">发展建议与行动计划</h2>
+                    
+                    <div style="background: #f0fdf4; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #10b981; margin-bottom: 15px;">第1个月：认知深化期</h3>
+                        <ul style="color: #4b5563; line-height: 1.6; padding-left: 20px;">
+                            <li>深入学习${q.quadrantName}的典型案例和工作方法</li>
+                            <li>阅读3本相关领域的经典书籍</li>
+                            <li>参加1次专业工作坊或线上课程</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: #eff6ff; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #3b82f6; margin-bottom: 15px;">第2个月：技能强化期</h3>
+                        <ul style="color: #4b5563; line-height: 1.6; padding-left: 20px;">
+                            <li>针对性提升核心技能，每天练习1小时</li>
+                            <li>完成1个小型的实践项目</li>
+                            <li>寻找1位mentor进行定期交流</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: #fefce8; padding: 20px; border-radius: 10px;">
+                        <h3 style="color: #f59e0b; margin-bottom: 15px;">第3个月：应用拓展期</h3>
+                        <ul style="color: #4b5563; line-height: 1.6; padding-left: 20px;">
+                            <li>将所学应用到实际工作或项目中</li>
+                            <li>建立个人作品集或案例库</li>
+                            <li>规划下一步的长期发展路径</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- 最后几页包含更多内容 -->
+                <div class="report-page">
+                    <h2 style="color: #4f46e5; margin-bottom: 20px;">推荐学习资源</h2>
+                    
+                    <div style="margin-bottom: 25px;">
+                        <h4 style="color: #1f2937; margin-bottom: 10px;">📚 推荐书籍</h4>
+                        <ul style="color: #4b5563; line-height: 1.8; padding-left: 20px;">
+                            <li><strong>《深度工作》</strong> - 培养深度专注能力</li>
+                            <li><strong>《学习之道》</strong> - 掌握高效学习方法</li>
+                            <li><strong>《影响力》</strong> - 提升影响和说服能力</li>
+                            <li><strong>《用户思维+》</strong> - 建立用户中心思维</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="margin-bottom: 25px;">
+                        <h4 style="color: #1f2937; margin-bottom: 10px;">🎓 推荐课程</h4>
+                        <ul style="color: #4b5563; line-height: 1.8; padding-left: 20px;">
+                            <li>Coursera: "Learning How to Learn"（学习方法）</li>
+                            <li>得到APP: "超级个体"系列课程</li>
+                            <li>知乎 Live: 各领域专家分享会</li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 style="color: #1f2937; margin-bottom: 10px;">🛠️ 实用工具</h4>
+                        <ul style="color: #4b5563; line-height: 1.8; padding-left: 20px;">
+                            <li>Notion - 知识管理与项目规划</li>
+                            <li>Notion AI - 学习辅助与内容生成</li>
+                            <li>Flomo - 碎片知识记录</li>
+                            <li>Xmind - 思维导图与知识整理</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- 最后一页包含升级选项 -->
+                <div class="report-page">
+                    <div style="text-align: center;">
+                        <h2 style="color: #4f46e5; margin-bottom: 20px;">持续成长路径</h2>
+                        <p style="color: #6b7280; margin: 20px 0; line-height: 1.6;">
+                            四象限定位是动态发展的起点，真正的成长在于持续探索和实践。
+                        </p>
+                        
+                        <!-- 在报告中嵌入升级选项 -->
+                        <!-- 继续上一页的代码 -->
+
+                        <!-- 在报告中嵌入升级选项 -->
+                        <div class="upgrade-section" style="margin: 30px 0;">
+                            <h3 style="color: #92400e; margin-bottom: 15px;">需要专业指导？</h3>
+                            <p style="color: #78350f; margin-bottom: 20px;">
+                                免费报告提供了方向，专业顾问帮你绘制精确的施工图。
+                            </p>
+                            
+                            <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px auto; max-width: 400px;">
+                                <h4 style="color: #d97706; margin-bottom: 15px;">"超级个体"启动咨询</h4>
+                                <p style="color: #4b5563; text-align: left; margin-bottom: 20px;">
+                                    <span style="color: #10b981; font-weight: bold;">✓</span> 30分钟一对一深度解读报告<br>
+                                    <span style="color: #10b981; font-weight: bold;">✓</span> 定制90天行动计划表<br>
+                                    <span style="color: #10b981; font-weight: bold;">✓</span> 推荐精准学习资源<br>
+                                    <span style="color: #10b981; font-weight: bold;">✓</span> 3次邮件跟进支持
+                                </p>
+                                
+                                <div style="margin: 20px 0;">
+                                    <p style="font-size: 0.9rem; color: #6b7280;">原价：<s>299元</s></p>
+                                    <p style="font-size: 1.5rem; color: #d97706; font-weight: bold;">限时体验价：99元</p>
+                                </div>
+                                
+                                <p style="font-size: 0.9rem; color: #92400e; margin-top: 15px;">
+                                    扫码添加微信，备注"咨询"即可预约
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                            <p style="color: #6b7280; font-size: 0.9rem;">报告生成时间：${date}</p>
+                            <p style="color: #6b7280; font-size: 0.9rem;">© 2024 超级个体实验室</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            showPage('page-report');
+        }
+        
+        function printReport() {
+            window.print();
+        }
+        
+        // ==================== 咨询预约功能 ====================
+        function showConsultationModal() {
+            document.getElementById('consultation-modal').style.display = 'flex';
+        }
+        
+        function closeConsultationModal() {
+            document.getElementById('consultation-modal').style.display = 'none';
+        }
+        
+        function submitConsultation() {
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const time = document.getElementById('time-preference').value;
+            
+            if (!name || !email) {
+                alert('请填写姓名和邮箱');
+                return;
+            }
+            
+            // 保存咨询数据
+            const consultation = {
+                id: 'consult_' + Date.now(),
+                name: name,
+                email: email,
+                phone: phone || '未填写',
+                timePreference: time,
+                quadrant: testData.quadrantName,
+                score: testData.score,
+                timestamp: new Date().toISOString(),
+                status: 'pending'
+            };
+            
+            consultationData.push(consultation);
+            localStorage.setItem(CONFIG.CONSULTATION_KEY, JSON.stringify(consultationData));
+            
+            alert('预约提交成功！我们将在24小时内通过邮件与您联系。');
+            
+            closeConsultationModal();
+        }
+        
+        // ==================== 管理员功能 ====================
+        function showAdminPanel() {
+            document.getElementById('admin-login-modal').style.display = 'flex';
+        }
+        
+        function closeAdminLoginModal() {
+            document.getElementById('admin-login-modal').style.display = 'none';
+        }
+        
+        function loginAdmin() {
+            const password = document.getElementById('admin-password').value;
+            
+            if (password === CONFIG.ADMIN_PASSWORD) {
+                // 更新统计数据
+                updateAdminStats();
+                // 显示管理员面板
+                showPage('page-admin');
+                closeAdminLoginModal();
+            } else {
+                alert('密码错误！');
+            }
+        }
+        
+        function updateAdminStats() {
+            const today = new Date().toDateString();
+            let todayCount = 0;
+            let totalScore = 0;
+            let q1Count = 0;
+            
+            allTestData.forEach(item => {
+                const itemDate = new Date(item.timestamp).toDateString();
+                if (itemDate === today) todayCount++;
+                
+                totalScore += item.score;
+                
+                if (item.quadrant === 'q1') q1Count++;
+            });
+            
+            // 更新统计显示
+            document.getElementById('total-responses').textContent = allTestData.length;
+            document.getElementById('today-responses').textContent = todayCount;
+            document.getElementById('avg-score').textContent = allTestData.length > 0 ? 
+                Math.round(totalScore / allTestData.length) : 0;
+            document.getElementById('q1-count').textContent = q1Count;
+            
+            // 更新数据表格
+            updateDataTable();
+        }
+        
+        function updateDataTable() {
+            const tbody = document.getElementById('data-table-body');
+            tbody.innerHTML = '';
+            
+            // 只显示最近20条记录
+            const recentData = allTestData.slice(-20).reverse();
+            
+            recentData.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.style.borderBottom = '1px solid #e5e7eb';
+                
+                const date = new Date(item.timestamp);
+                const formattedDate = `${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+                
+                row.innerHTML = `
+                    <td style="padding: 12px;">${recentData.length - index}</td>
+                    <td style="padding: 12px;">${formattedDate}</td>
+                    <td style="padding: 12px;">${item.quadrantName}</td>
+                    <td style="padding: 12px;">${item.score}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        function exportData(format) {
+            let dataStr, fileName, mimeType;
+            
+            if (format === 'json') {
+                dataStr = JSON.stringify(allTestData, null, 2);
+                fileName = `super_individual_data_${new Date().toISOString().split('T')[0]}.json`;
+                mimeType = 'application/json';
+            } else if (format === 'csv') {
+                // 转换为CSV格式
+                const headers = ['ID', '时间', '象限', '分数', 'X坐标', 'Y坐标'];
+                const csvRows = [headers.join(',')];
+                
+                allTestData.forEach(item => {
+                    const row = [
+                        `"${item.id}"`,
+                        `"${item.timestamp}"`,
+                        `"${item.quadrantName}"`,
+                        item.score,
+                        item.result?.x || 0,
+                        item.result?.y || 0
+                    ];
+                    csvRows.push(row.join(','));
+                });
+                
+                dataStr = csvRows.join('\n');
+                fileName = `super_individual_data_${new Date().toISOString().split('T')[0]}.csv`;
+                mimeType = 'text/csv';
+            }
+            
+            const blob = new Blob([dataStr], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert(`数据已导出为${format.toUpperCase()}文件: ${fileName}`);
+        }
+        
+        function clearAllData() {
+            if (confirm('确定要清空所有数据吗？此操作不可恢复！')) {
+                localStorage.removeItem(CONFIG.STORAGE_KEY);
+                localStorage.removeItem(CONFIG.CONSULTATION_KEY);
+                allTestData = [];
+                consultationData = [];
+                updateAdminStats();
+                alert('所有数据已清空！');
+            }
+        }
+        
+        function showWelcomePage() {
+            showPage('page-welcome');
+        }
+        
+        function restartTest() {
+            if (confirm('确定要重新开始测评吗？当前进度将丢失。')) {
+                showPage('page-welcome');
+            }
+        }
+        
+        // ==================== 工具函数 ====================
+        function showResultPage() {
+            // 这个函数在 completeTest 中调用
+            // 我们已经有了 showPage('page-result') 的调用
+            // 这里确保结果内容被正确显示
+            const resultDiv = document.getElementById('result-content');
+            if (resultDiv.innerHTML === '') {
+                // 如果结果内容为空，重新计算并显示
+                calculateResult();
+                const q = testData;
+                
+                // 计算在四象限图中的位置
+                const chartSize = 350;
+                const center = chartSize / 2;
+                const xPos = center + (q.x / 8) * (center - 20);
+                const yPos = center - (q.y / 8) * (center - 20);
+                
+                resultDiv.innerHTML = `
+                    <div style="text-align: center;">
+                        <div class="quadrant-chart">
+                            <div style="position: absolute; width: 100%; height: 2px; background: #374151; top: 50%;"></div>
+                            <div style="position: absolute; width: 2px; height: 100%; background: #374151; left: 50%;"></div>
+                            
+                            <div class="quadrant-label q1-label">战略创新者</div>
+                            <div class="quadrant-label q2-label">人际影响者</div>
+                            <div class="quadrant-label q3-label">技术执行者</div>
+                            <div class="quadrant-label q4-label">运营协调者</div>
+                            
+                            <div class="quadrant-point" style="left: ${xPos}px; top: ${yPos}px;"></div>
+                        </div>
+                        
+                        <div style="margin-top: 20px;">
+                            <h2 style="color: ${q.color}; margin-bottom: 10px;">${q.quadrantName}</h2>
+                            <div style="font-size: 2.5rem; color: #4f46e5; font-weight: bold; margin: 10px 0;">${q.score}/100</div>
+                            <p style="color: #4b5563; max-width: 500px; margin: 0 auto 20px; line-height: 1.6;">
+                                ${getQuadrantDescription(q.quadrant)}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #f8fafc; padding: 20px; border-radius: 10px; margin-top: 20px; text-align: left;">
+                        <h4 style="color: #4f46e5; margin-bottom: 15px;">你的核心特点：</h4>
+                        <ul style="color: #4b5563; line-height: 1.6; padding-left: 20px;">
+                            ${getQuadrantStrengths(q.quadrant).map(s => `<li>${s}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            showPage('page-result');
+        }
+        
+        // 初始化时绑定事件
+        document.addEventListener('DOMContentLoaded', function() {
+            // 确保所有必要的事件都已绑定
+            const startBtn = document.getElementById('start-btn');
+            if (startBtn) {
+                startBtn.addEventListener('click', startTest);
+            }
+            
+            // 加载数据
+            loadAllData();
+            loadConsultationData();
+            
+            // 如果URL中有参数，可以在这里处理
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('admin')) {
+                showAdminPanel();
+            }
+        });
+    </script>
+</body>
+</html>
